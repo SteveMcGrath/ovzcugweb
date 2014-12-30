@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+	<div class="col-md-4 col-md-offset-4">
+	{% for user in users %}
+		{% if g.user.username == user.name or g.user.admin %}
+		<div class="well bs-component">
+			<div class="col-md-4"><h2>{{ user.username }}</h2></div>
+			<div class="col-md-4 pull-right">{{ user.days_member }} total/<span class="text-{{ user.member_status }}">{{ user.days_left }}</span> left</div>
+			{% if g.user.admin %}
+			<a href="/vps/new/{{ user.username }}" class="btn btn-primary">Add VPS</a>
+			{% endif %}
+			{% for container in user.containers %}
+			<div class="well bs-component"
+{% endblock %}

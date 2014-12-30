@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block content %}
+{% set vps_remaining = vps_remaining or 0 %}
+<div class="hero-unit">
+	<div class="row">
+		<div class="jumbotron">
+			<div class="col-lg-8">
+				<h1>Open VPS Spaces <span class="text-primary">{{ vps_remaining  }}</span></h1>
+			</div>
+			<div class="col-lg-4 pull-right">
+				<p>Virtual Private Servers for the hobbyist.</p>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="row">
+	<div class="col-lg-4">
+		<p>Co-Located in a Data-center in the Chicago-land area, 
+			CUGNet is conveniently located in the largest of the 
+			Midwest cities, allowing for low latencies across the country.
+		</p>
+	</div>
+	<div class="col-lg-4">
+		<p>CUGNet is a community driven effort. We aren't out to 
+			try to make money or have any exterior motives; we are 
+			simply trying to provide affordable and reliable VPS solutions.
+		</p>
+	</div>
+	<div class="col-lg-4">
+		<p>CUGNet is designed and maintained using industry standard technologies...</p>
+	</div>
+</div>
+{% endblock %}

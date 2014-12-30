@@ -1,0 +1,86 @@
+{% set open_tickets = open_tickets or 0 %}
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>CUGNet | {{ title }}</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="">
+		<meta name="author" content="">
+
+		<!-- Le styles -->
+		<link rel="stylesheet" href="{{ url_for('.static', filename='css/bootstrap.min.css') }}" />
+		<style type="text/css">
+			body {
+				padding-top: 60px;
+				padding-bottom: 40px;
+			}
+		</style>
+		<link rel="stylesheet" href="{{ url_for('.static', filename='css/bootstrap.min.css') }}" />
+		<link rel="stylesheet" href="{{ url_for('.static', filename='css/style.css') }}" />
+
+		<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+		<!--[if lt IE 9]>
+		  <script src="../assets/js/html5shiv.js') }}"></script>
+		<![endif]-->
+
+		<!-- Fav and touch icons -->
+		<link rel="apple-touch-icon-precomposed" sizes="144x144" href="{{ url_for('.static', filename='images/apple-touch-icon-144-precomposed.png') }}" />
+		<link rel="apple-touch-icon-precomposed" sizes="114x114" href="{{ url_for('.static', filename='images/apple-touch-icon-114-precomposed.png') }}" />
+		<link rel="apple-touch-icon-precomposed" sizes="72x72" href="{{ url_for('.static', filename='images/apple-touch-icon-72-precomposed.png') }}" />
+		<link rel="apple-touch-icon-precomposed" href="{{ url_for('.static', filename='apple-touch-icon-57-precomposed.png') }}" />
+		<link rel="shortcut icon" href="{{ url_for('.static', filename='images/favicon.png') }}" />
+	</head>
+	<body>
+		<div class="navbar navbar-default navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header">
+					<a class="navbar-brand" href="{{ url_for('homepage') }}">CUG<span id="logo-color">Net</span></a>
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-main">
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+				</div>
+				<div class="navbar-collapse collapse" id="navbar-main">
+					<ul class="nav navbar-nav">
+						<li {% if request.path == url_for('aboutus') %}class="active"{% endif %}><a href="{{ url_for('aboutus') }}">About</a></li>
+						<li {% if request.path == url_for('membership') %}class="active"{% endif %}><a href="{{ url_for('membership') }}">Membership</a></li>
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						{% if g.user.is_authenticated() %}
+						<li {% if request.path == url_for('vps_list') %}class="active"{% endif %}><a href="{{ url_for('vps_list') }}">VPS Hosts</a></li>
+						<li {% if request.path == url_for('logout') %}class="active"{% endif %}><a href="{{ url_for('tickets_list') }}">Tickets <span class="badge">{{ open_tickets }}</span></a></li>
+						<li {% if request.path == url_for('logout') %}class="active"{% endif %}><a href="{{ url_for('logout') }}">Logout</a></li>
+						{% else %}
+						<li {% if request.path == url_for('login') %}class="active"{% endif %}><a href="{{ url_for('login') }}">Login</a></li>
+						{% endif %}
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<div class="container">
+			{% for category, message in get_flashed_messages(with_categories=true) %}
+			<div class="bs component">
+				<div class="alert alert-dismissable alert-{{ category }}">
+					<button type="button" class="close" data-dismiss="alert">&times;</button>
+					{{ message }}
+				</div>
+			</div>
+			{% endfor %}
+			{% block content %}{% endblock %}
+			<footer>
+				<div class="row">
+					<div class="col-lg-12">
+						<ul class="list-unstyled">
+							<li class="pull-right"><a href="#top">Back to Top</a></li>
+							<li>CUGNet 2004-2015</li>
+						</ul>
+					</div>
+				</div>
+			</footer>
+		</div>
+		<script src="{{ url_for('.static', filename='js/jquery.min.js') }}"></script>
+	    <script src="{{ url_for('.static', filename='js/bootstrap.min.js') }}"></script>
+	</body>
+</html>

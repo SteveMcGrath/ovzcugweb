@@ -1,0 +1,4 @@
+.DS_Store
+*.pyc
+ovzweb/database.db
+ovzweb/config.py
