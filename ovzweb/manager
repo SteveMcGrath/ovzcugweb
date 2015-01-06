@@ -1,5 +1,43 @@
 #!/usr/bin/env python
 from app import manager
+from app import db
+from app.models import User, Address
+
+@manager.command 
+def admin():
+    '''
+    Creates an administrative user.
+    '''
+    print 'Create the Admin User...'
+    admin = User()
+    admin.admin = True
+    admin.username = raw_input('Username : ')
+    passwd = raw_input('Password : ')
+    admin.update_password(passwd)
+    admin.email = raw_input('Email Address : ')
+    admin.membership = 0
+    db.session.add(admin)
+    db.session.commit()
+
+
+@manager.command
+def addresses():
+    '''
+    Creates the ip addresses objects based off of the settings in config.py.
+    '''
+    import netaddr
+    for cidr in app.config['VPS_NETWORKS']:
+        network = [str(ip) for ip in netaddr.IPNetwork(cidr)]
+        if app.config['VPS_NETWORK_EXCLUDE_NETWORK']:
+            network = network[1:]
+        if app.config['VPS_NETWORK_EXCLUDE_BROADCAST']:
+            network = network[:-1]
+        for ip in network:
+            if ip not in app.config['VPS_NETWORK_EXCLUDE_HOSTS']:
+                if Address.query.filter_by(ip=ip).count() < 1:
+                    db.session.add(Address(ip=ip))
+                    print 'Added %s into the Database' % ip
+        db.session.commit()
 
 if __name__ == '__main__':
     manager.run()
