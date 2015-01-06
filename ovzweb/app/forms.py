@@ -1,7 +1,18 @@
 from datetime import date
 from flask.ext.wtf import Form
 from wtforms.fields import *
+from wtforms.ext.sqlalchemy.fields import *
+from flask_wtf.html5 import *
+from app import app
 from wtforms.validators import Required, Optional
+from app.models import Address
+
+def available_addresses():
+    return Address.query.filter_by(container_id=None)
+
+
+def hardware_nodes():
+    return [(node, node) for node in app.config['HARDWARE_NODES']]
 
 
 class LoginForm(Form):
@@ -41,10 +52,15 @@ class NewUserForm(Form):
 
 
 class NewContainerForm(Form):
-    node = SelectField('Hardware Node', validators=[Required()])
+    node = SelectField('Hardware Node', choices=hardware_nodes(), validators=[Required()])
     ram = IntegerField('RAM (MB)', default=1024, validators=[Required()])
     swap = IntegerField('Swap (MB)', default=1024, validators=[Required()])
-    ipaddr = SelectField('Available IP Addresses', validators=[Required()])
+    disk = IntegerField('Disk (GB)', default=100, validators=[Required()])
+    ipaddresses = QuerySelectMultipleField('Available IP Addresses', 
+        validators=[Required()],
+        query_factory=available_addresses, 
+        allow_blank=True,
+        get_label='ip')
 
 
 class NewTicketForm(Form):

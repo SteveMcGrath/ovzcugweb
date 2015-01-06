@@ -1,15 +1,104 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="row">
-	<div class="col-md-4 col-md-offset-4">
+<div class="col-md-6 col-md-offset-3">
+{% for user in users %}
+	{% if g.user.username == user.name or g.user.admin %}
+		<div class="row">
+			<div class="col-md-4"><h3>{{ user.username }}</h3></div>
+			<div class="col-md-4 pull-right">
+				<div class="row">
+					{% if g.user.admin %}
+						<a href="/user/{{ user.username }}" class="btn btn-primary btn-xs pull-right">Edit User</a>
+						<a href="/vps/new/{{ user.username }}" class="btn btn-primary btn-xs pull-right">Add VPS</a>
+					{% endif %}
+				</div>
+				<div class="row">
+					<div class="pull-right">
+						{{ user.days_member }} total/
+						<span class="text-{{ user.member_status }}">{{ user.days_left }}</span> left
+					</div>
+				</div>
+			</div>
+		</div>
+		{% for container in user.containers %}
+			<div class="well bs-component" id="{{ user.username }}-{{ container.name }}">
+				<div class="row">
+					<div class="col-md-6">
+						<legend>{{ container.name }}</legend>
+					</div>
+					<div class="col-md-3 pull-right">
+						{% if not container.ctid in vps %}<span class="label label-danger pull-right">not created</span>{% else %}
+							{% if vps[container.ctid]['status'] == 'running' %}
+								<span class="label label-success pull-right">running</span>
+							{% else %}
+								<span class="label label-danger pull-right">stopped</span>
+							{% endif %}
+						{% endif %}
+					</div>
+				</div>
+				<p><strong>Hostname :</strong> {{ container.hostname }}</p>
+				<p><strong>Addresses : </strong> {{ container.ipaddresses|join(', ', attribute='ip') }}</p>
+				{% if container.ctid in vps %}
+					{% if vps[container.ctid]['status'] == 'running' %}
+						<button type="button" class="btn btn-danger">Stop</button>
+						<button type="button" class="btn btn-warning">Restart</button>
+					{% else %}
+						<button type="button" class="btn btn-success">Start</button>
+						<button type="button" class="btn btn-danger">Destroy</button>
+					{% endif %}
+					<button type="button" class="btn btn-info">Snapshot</button>
+					<button type="button" class="btn btn-info" href="#">Update Info</button>
+					{% set cinfo = vps[container.ctid] %}
+					{% set cdisk = cinfo['diskspace']['usage'] / cinfo['diskspace']['softlimit'] * 100 %}
+					{% set cswap = cinfo['swappages']['held'] / cinfo['swappages']['limit'] * 100 %}
+					{% set cram = cinfo['physpages']['held'] / cinfo['physpages']['limit'] * 100 %}
+					<div class="row top-buffer"></div>
+					<div class="row">
+						<div class="col-md-3">
+							<strong>Disk</strong>
+							<span class="pull-right">{{ container.disk }}GB</span>
+						</div>
+						<div class="progress text-pull-right">
+							<div class="progress-bar progress-bar-{% if cdisk > 70 %}warning{% elif cdisk > 90 %}danger{% else %}info{% endif %}" style="width: {{ cdisk }}%"></div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-3">
+							<strong>RAM</strong>
+							<span class="pull-right">{{ container.ram }}MB</span>
+						</div>
+						<div class="progress">
+							<div class="progress-bar text-pull-right progress-bar-{% if cram > 70 %}warning{% elif cram > 90 %}danger{% else %}info{% endif %}" style="width: {{ cram }}%"></div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-3">
+							<strong>Swap</strong>
+							<span class="pull-right">{{ container.swap }}MB</span>
+						</div>
+						<div class="progress">
+							<div class="progress-bar text-pull-right progress-bar-{% if cswap > 70 %}warning{% elif cswap > 90 %}danger{% else %}info{% endif %}" style="width: {{ cswap }}%"></div>
+						</div>
+					</div>
+				{% else %}
+					<button type="button" class="btn btn-info">Create</button>
+					<button type="button" class="btn btn-info" href="#">Update Info</button>
+				{% endif %}
+			</div>
+		{% endfor %}
+	{% endif %}
+{% endfor %}
+</div>
+<div class="col-md-2 row pull-right">
 	{% for user in users %}
 		{% if g.user.username == user.name or g.user.admin %}
-		<div class="well bs-component">
-			<div class="col-md-4"><h2>{{ user.username }}</h2></div>
-			<div class="col-md-4 pull-right">{{ user.days_member }} total/<span class="text-{{ user.member_status }}">{{ user.days_left }}</span> left</div>
-			{% if g.user.admin %}
-			<a href="/vps/new/{{ user.username }}" class="btn btn-primary">Add VPS</a>
-			{% endif %}
+		<div class="list-group pull-right col-md-12">
+			<h4>{{ user.username }}</h4>
 			{% for container in user.containers %}
-			<div class="well bs-component"
+			<a class="list-group-item" href="#{{ user.username }}-{{ container.name }}">{{ container.name }}</a>
+			{% endfor %}
+		</div>
+		{% endif %}
+	{% endfor %}
+</div>
 {% endblock %}

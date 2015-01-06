@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+	<div class="col-md-4 col-md-offset-4">
+		<form class="form-horizontal" method="POST">
+			<fieldset>
+				{{ form.hidden_tag() }}
+				<legend>New VPS Container</legend>
+				<div class="form-group">
+					{{ form.node.label }} {{ form.node(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					{{ form.ram.label }} {{ form.ram(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					{{ form.swap.label }} {{ form.swap(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					{{ form.disk.label }} {{ form.disk(class_='form-control') }}
+				</div>				
+				<div class="form-group">
+					{{ form.ipaddresses.label }} {{ form.ipaddresses(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					<button class="btn btn-default">Cancel</button>
+					<button type="submit" class="btn btn-primary">Submit</button>
+				</div>
+			</fieldset>
+		</form>
+	</div>
+</div>
+{% endblock %}

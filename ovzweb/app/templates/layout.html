@@ -1,4 +1,5 @@
 {% set open_tickets = open_tickets or 0 %}
+{% import "macros.html" as macros %}
 <html>
 	<head>
 		<meta charset="utf-8">
@@ -34,7 +35,7 @@
 		<div class="navbar navbar-default navbar-fixed-top">
 			<div class="container">
 				<div class="navbar-header">
-					<a class="navbar-brand" href="{{ url_for('homepage') }}">CUG<span id="logo-color">Net</span></a>
+					<a class="navbar-brand" href="{{ url_for('homepage') }}">CUG<span id="text-danger">Net</span></a>
 					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-main">
 						<span class="icon-bar"></span>
 						<span class="icon-bar"></span>
@@ -49,7 +50,10 @@
 					<ul class="nav navbar-nav navbar-right">
 						{% if g.user.is_authenticated() %}
 						<li {% if request.path == url_for('vps_list') %}class="active"{% endif %}><a href="{{ url_for('vps_list') }}">VPS Hosts</a></li>
-						<li {% if request.path == url_for('logout') %}class="active"{% endif %}><a href="{{ url_for('tickets_list') }}">Tickets <span class="badge">{{ open_tickets }}</span></a></li>
+						<li {% if request.path == url_for('tickets_list') %}class="active"{% endif %}><a href="{{ url_for('tickets_list') }}">Tickets <span class="badge">{{ open_tickets }}</span></a></li>
+						{% if g.user.admin %}
+						<li {% if request.path == url_for('user_edit') %}class="active"{% endif %}><a href="{{ url_for('user_edit') }}">New User</a></li>
+						{% endif %}
 						<li {% if request.path == url_for('logout') %}class="active"{% endif %}><a href="{{ url_for('logout') }}">Logout</a></li>
 						{% else %}
 						<li {% if request.path == url_for('login') %}class="active"{% endif %}><a href="{{ url_for('login') }}">Login</a></li>

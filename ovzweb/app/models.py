@@ -21,9 +21,9 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(255))
     registered = db.Column(db.Date, default=date.today())
     admin = db.Column(db.Boolean, default=False)
-    expires = db.Column(db.Date)
+    expires = db.Column(db.Date, default=date.today())
     membership = db.Column(db.Integer, default=150)
-    machines = db.relationship('Container', backref='owner')
+    containers = db.relationship('Container', backref='owner')
     tickets = db.relationship('Ticket', backref='owner')
     payments = db.relationship('Payment', backref='user')
 
@@ -141,10 +141,10 @@ class Container(db.Model):
                 name=self.name, 
                 hostname=self.hostname,
                 netfilter='full',
-
+                save=''
         )
         for ipaddress in self.ipaddresses:
-            vz.ctl('set', self.node, self.ctid, ipadd=ipaddress.ip)
+            vz.ctl('set', self.node, self.ctid, ipadd=ipaddress.ip, save='')
         self.change_ram()
 
     def suspend(self):
@@ -159,7 +159,8 @@ class Container(db.Model):
     def change_ram(self):
         return vz.ctl('set', self.node, self.ctid,
             ram='%dM' % self.ram,
-            swap='%dM' % self.disk
+            swap='%dM' % self.disk,
+            save=''
         )
 
     def migrate(self, destination):

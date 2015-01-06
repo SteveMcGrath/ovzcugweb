@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, session, url_for, abort, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
-from app import app, db, login_manager
-from app.models import User, Container
+from app import app, db, login_manager, vz
+from app.models import User, Container, Ticket, Note, Address, Payment
 from sqlalchemy import desc
 from paypal import PayPalConfig
 from paypal import PayPalInterface
@@ -128,20 +128,100 @@ def paypal_confirm():
 @app.route('/tickets')
 @login_required
 def tickets_list():
-    pass
+    if g.user.admin:
+        tickets = Ticket.query.filter_by(status='open').all()
+    else:
+        tickets = Ticket.query.filter_by(status='open').filter_by(user_id=g.user.id).all()
+    return render_template('ticket_list.html', tickets=tickets)
 
 
-@app.route('/tickets/<int:ticket_id>')
+@app.route('/tickets/detail', methods=['GET', 'POST'])
+@app.route('/tickets/detail/<int:ticket_id>', methods=['GET', 'POST'])
 @login_required
-def ticket_detail():
-    pass
+def ticket_detail(ticket_id=None):
+    if ticket_id != None:
+        ticket = Ticket.query.filter_by(id=ticket_id).first_or_404()
+    else:
+        ticket = Ticket()
+    if g.user.admin or g.user.id == ticket.user.id:
+        update = forms.TicketUpdateForm(obj=ticket)
+        notefrm = forms.NewNoteForm()
+        if notefrm.validate_on_submit():
+            note = Note()
+            notefrm.populate_obj(note)
+            ticket.notes.append(note)
+            db.session.merge(ticket)
+            db.session.commit()
+            flash('Ticket Updated', 'success')
+        if update.validate_on_submit():
+            update.populate_obj(ticket)
+            db.session.merge(ticket)
+            db.session.commit()
+            flash('Ticket Status Updated', 'success')
+    return render_template('ticket_detail.html', ticket=ticket, update=update, note=notefrm)
+
+
+
+@app.route('/user', methods=['GET', 'POST'])
+@app.route('/user/<username>', methods=['GET', 'POST'])
+def user_edit(username=None):
+    if username != None:
+        user = User.query.filter_by(username=username).first_or_404()
+    else:
+        user = User()
+    form = forms.NewUserForm(obj=user)
+    if form.validate_on_submit():
+        if g.user.admin or g.user.username == username:
+            form.populate_obj(user)
+            if username != None:
+                db.session.merge(user)
+                flash('User Updated!', 'success')
+            else:
+                db.session.add(user)
+                flash('User Added!', 'success')
+            db.session.commit()
+        else:
+            flash('Access Denied', 'danger')
+
+
+
+@app.route('/vps/new/<username>', methods=['GET', 'POST'])
+@app.route('/vps/edit/<username>/<int:vps_id>', methods=['GET', 'POST'])
+@login_required
+def new_vps(username, vps_id=None):
+    if g.user.admin:
+        user = User.query.filter_by(username=username).first_or_404()
+        form = forms.NewContainerForm()
+        if form.validate_on_submit():
+            vps = Container()
+            form.populate_obj(vps)
+            vps.name = '%s%s' % (app.config['HOSTNAME_PREFIX'], vps.ipaddresses[0].ip.split('.')[-1])
+            vps.hostname = '%s.%s' % (vps.name, app.config['HOSTNAME_SUFFIX'])
+            db.session.add(vps)
+            db.session.commit()
+            vps.ctid = vps.id + 1000
+            user.containers.append(vps)
+            db.session.merge(user)
+            db.session.merge(vps)
+            db.session.commit()
+            flash('%s Created' % vps.hostname, 'success')
+        else:
+            return render_template('vps_new.html', form=form)
+    else:
+        flash('%s is not an admin.' % g.user.username, 'danger')
+    return redirect(url_for('vps_list'))
 
 
 @app.route('/vps/list')
 @login_required
 def vps_list():
-    users = Users.query.all()
-    return render_template('vps_list.html', title='VPS List', users=users)
+    users = User.query.all()
+    vps = {}
+    for node in app.config['HARDWARE_NODES']:
+        data = vz.list(node, a='')
+        for item in data:
+            vps[item['ctid']] = item
+    return render_template('vps_list.html', title='VPS List', users=users, vps=vps)
 
 
 @app.route('/vps/start/<int:vps_id>')

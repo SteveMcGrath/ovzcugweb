@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="col-md-6 col-md-offset-3">
+	<a class="btn btn-primary" href="/tickets/update">Open Ticket</a>
+	<table class="table table-striped table-hover">
+		<thead>
+			<th>Ticket #</th>
+			<th>Status</th>
+			<th>Subject</th>
+		</thead>
+		<tbody>
+			{% for ticket in tickets %}
+			<tr>
+				<td><a class="btn btn-info btn-xs" href="/tickets/detail/{{ ticket.id }}">{{ ticket.id }} Detail</a></td>
+				<td>{{ ticket.status }}</td>
+				<td>{{ ticket.subject }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+{% endblock %}

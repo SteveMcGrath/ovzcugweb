@@ -1,0 +1,24 @@
+{% macro confirm_box(button_name, button_type, title, message, link=None, modal_id='modal-id', c=False) %}
+{% if c: %}
+	{% set link = '/vps/%s/%s' % (button_name, c.ctid) %}
+	{% set modal_id = 'modal-%s-%s' % (button_name, c.ctid) %}
+{% endif %}
+<button type="button" class="btn btn-{{ button_type }}" data-toggle="modal" data-target="#{{ modal_id }}">{{ button_name }}</button>
+<div class="modal fade" id="{{ modal_id}}" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h4 class="modal-title">{{ title }}</h4>
+			</div>
+			<div class="modal-body">
+				<p>{{ message }}</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				<a class="btn btn-primary" href="{{ link }}">Confirm</button>
+			</div>
+		</div>
+	</div>
+</div>
+{% endmacro %}
