@@ -29,3 +29,8 @@ def ctl(host, ctid, action, **opts):
     cmd = 'vzctl %s %s %s' % (action, ctid, 
         ' '.join(['--%s %s' % (opt, opts[opt]) for opt in opts]))
     return command(host, cmd)
+
+
+def migrate(host, ctid, destination, **opts):
+    cmd = 'vzmigrate -t -c --live %s %s' % (destination, ctid)
+    return command(host, cmd)
