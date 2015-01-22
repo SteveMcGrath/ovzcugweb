@@ -50,7 +50,7 @@
 					<ul class="nav navbar-nav navbar-right">
 						{% if g.user.is_authenticated() %}
 						<li {% if request.path == url_for('vps_list') %}class="active"{% endif %}><a href="{{ url_for('vps_list') }}">VPS Hosts</a></li>
-						<li {% if request.path == url_for('tickets_list') %}class="active"{% endif %}><a href="{{ url_for('tickets_list') }}">Tickets <span class="badge">{{ open_tickets }}</span></a></li>
+						<li {% if request.path == url_for('tickets_list') %}class="active"{% endif %}><a href="{{ url_for('tickets_list') }}">Tickets <span class="badge">{{ g.open_tickets }}</span></a></li>
 						{% if g.user.admin %}
 						<li {% if request.path == url_for('user_edit') %}class="active"{% endif %}><a href="{{ url_for('user_edit') }}">New User</a></li>
 						{% endif %}
@@ -86,5 +86,12 @@
 		</div>
 		<script src="{{ url_for('.static', filename='js/jquery.min.js') }}"></script>
 	    <script src="{{ url_for('.static', filename='js/bootstrap.min.js') }}"></script>
+	    <script type="text/javascript">
+	    jQuery(document).ready(function($) {
+		      $(".clickable").click(function() {
+		            window.document.location = $(this).attr("href");
+		      });
+		});
+		</script>
 	</body>
 </html>

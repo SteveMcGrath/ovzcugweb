@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+	<div class="col-md-4 col-md-offset-4">
+		<form class="form-horizontal" method="POST">
+			<fieldset>
+				{{ form.hidden_tag() }}
+				<legend>New Ticket</legend>
+				<div class="form-group">
+					{{ form.subject.label }} {{ form.subject(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					{{ form.priority.label }} {{ form.priority(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					{{ form.text.label }} {{ form.text(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					<a class="btn btn-default" href="{{ url_for('tickets_list') }}">Cancel</a>
+					<button type="submit" class="btn btn-primary">Submit</button>
+				</div>
+			</fieldset>
+		</form>
+	</div>
+</div>
+{% endblock %}

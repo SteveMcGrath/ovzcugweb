@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+	<div class="col-md-4 col-md-offset-4">
+		<div class="well bs-component">
+			<legend>Delete VPS Container</legend>
+			<p>Are you sure you wish to delete the VPS container?  This cannot be un-done!</p>
+			<form class="form-horizontal" method="POST">
+				<fieldset>
+					{{ form.hidden_tag() }}
+					<div class="form-group">
+						{{ form.hostname.label }} {{ form.hostname(class_='form-control') }}
+					</div>
+					<div class="form-group">
+						<a class="btn btn-primary" href="{{ url_for('vps_list') }}">Cancel</a>
+						<button type="submit" class="btn btn-primary">Submit</button>
+					</div>
+				</fieldset>
+			</form>
+		</div>
+	</div>
+</div>
+{% endblock %}

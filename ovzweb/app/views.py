@@ -23,6 +23,10 @@ def load_user(userid):
 @app.before_request
 def before_request():
     g.user = current_user
+    if g.user.admin:
+        g.open_tickets = Ticket.query.filter_by(status='open').count()
+    else:
+        g.open_tickets = Ticket.query.filter_by(status='open').filter_by(user_id=g.user.id).count()
 
 
 @app.route('/')
@@ -132,33 +136,48 @@ def tickets_list():
         tickets = Ticket.query.filter_by(status='open').all()
     else:
         tickets = Ticket.query.filter_by(status='open').filter_by(user_id=g.user.id).all()
-    return render_template('ticket_list.html', tickets=tickets)
+    return render_template('ticket_list.html', tickets=tickets, title='Open Tickets')
 
 
-@app.route('/tickets/detail', methods=['GET', 'POST'])
+@app.route('/tickets/new', methods=['GET', 'POST'])
+@login_required
+def new_ticket():
+    form = forms.NewTicketForm()
+    if form.validate_on_submit():
+        ticket = Ticket()
+        form.populate_obj(ticket)
+        db.session.add(ticket)
+        db.session.commit()
+        flash('%s Created' % ticket.subject, 'success')
+        return redirect(url_for('tickets_list'))
+    for error in form.errors:
+        flash('%s: %s' % (error, form.errors[error]), 'danger')
+    return render_template('ticket_new.html', form=form, title='New Ticket')
+
+
 @app.route('/tickets/detail/<int:ticket_id>', methods=['GET', 'POST'])
 @login_required
-def ticket_detail(ticket_id=None):
-    if ticket_id != None:
-        ticket = Ticket.query.filter_by(id=ticket_id).first_or_404()
-    else:
-        ticket = Ticket()
+def ticket_detail(ticket_id):
+    ticket = Ticket.query.filter_by(id=ticket_id).first_or_404()
     if g.user.admin or g.user.id == ticket.user.id:
-        update = forms.TicketUpdateForm(obj=ticket)
-        notefrm = forms.NewNoteForm()
-        if notefrm.validate_on_submit():
-            note = Note()
-            notefrm.populate_obj(note)
-            ticket.notes.append(note)
-            db.session.merge(ticket)
-            db.session.commit()
-            flash('Ticket Updated', 'success')
-        if update.validate_on_submit():
-            update.populate_obj(ticket)
+        form = forms.TicketUpdateForm()
+        if form.validate_on_submit():
+            ticket.status = form.status.data
+            ticket.priority = int(form.priority.data)
+            if form.text.data != '':
+                note = Note()
+                note.text = form.text.data
+                ticket.conversation.append(note)
+                flash('New Content posted to ticket %s' % ticket.id, 'success')
             db.session.merge(ticket)
             db.session.commit()
             flash('Ticket Status Updated', 'success')
-    return render_template('ticket_detail.html', ticket=ticket, update=update, note=notefrm)
+        else:
+            form.status.data = ticket.status
+            form.priority.data = str(ticket.priority)
+    for error in form.errors:
+        flash('%s: %s' % (error, form.errors[error]), 'danger')
+    return render_template('ticket_detail.html', ticket=ticket, form=form, title='Ticket: %s' % ticket.id)
 
 
 
@@ -186,7 +205,6 @@ def user_edit(username=None):
 
 
 @app.route('/vps/new/<username>', methods=['GET', 'POST'])
-@app.route('/vps/edit/<username>/<int:vps_id>', methods=['GET', 'POST'])
 @login_required
 def new_vps(username, vps_id=None):
     if g.user.admin:
@@ -206,9 +224,44 @@ def new_vps(username, vps_id=None):
             db.session.commit()
             flash('%s Created' % vps.hostname, 'success')
         else:
-            return render_template('vps_new.html', form=form)
+            return render_template('vps_new.html', form=form, title='New VPS')
     else:
         flash('%s is not an admin.' % g.user.username, 'danger')
+    return redirect(url_for('vps_list'))
+
+
+@app.route('/vps/create/<int:vps_id>', methods=['GET', 'POST'])
+@login_required
+def create_vps(vps_id):
+    container = Container.query.filter_by(id=vps_id).first_or_404()
+    if g.user.admin or container.owner == g.user:
+        form = forms.CreateVPSForm()
+        if form.validate_on_submit():
+            container.template == form.template.data
+            container.create()
+            db.session.merge(container)
+            db.session.commit()
+            return redirect(url_for('vps_list'))
+        return render_template('vps_create.html', form=form, container=container, title='Create VPS')
+
+
+
+@app.route('/vps/hostname/<int:vps_id>', methods=['GET', 'POST'])
+@login_required
+def edit_vps(vps_id):
+    container = Container.query.filter_by(id=vps_id).first_or_404()
+    if g.user.admin or container.owner == g.user:
+        form = forms.HostnameForm(obj=container)
+        if form.validate_on_submit():
+            form.populate_obj(container)
+            db.session.merge(container)
+            db.session.commit()
+            container.update_hostname()
+            flash('%s Names Updated' % container.hostname, 'success')
+        else:
+            return render_template('vps_hostname.html', form=form, title='Update Hostname')
+    else:
+        flash('Access Denied', 'danger')
     return redirect(url_for('vps_list'))
 
 
@@ -228,7 +281,7 @@ def vps_list():
 @login_required
 def vps_start(vps_id):
     container = Container.query.filter_by(id=vps_id).first_or_404()
-    if container.owner == g.user:
+    if g.user.admin or container.owner == g.user:
         container.start()
         flash('Container Started', 'success')
     return redirect(url_for('vps_list'))
@@ -238,7 +291,7 @@ def vps_start(vps_id):
 @login_required
 def vps_stop(vps_id):
     container = Container.query.filter_by(id=vps_id).first_or_404()
-    if container.owner == g.user:
+    if g.user.admin or container.owner == g.user:
         container.stop()
         flash('Container Stopped', 'success')
     return redirect(url_for('vps_list'))
@@ -248,7 +301,7 @@ def vps_stop(vps_id):
 @login_required
 def vps_restart(vps_id):
     container = Container.query.filter_by(id=vps_id).first_or_404()
-    if container.owner == g.user:
+    if g.user.admin or container.owner == g.user:
         container.restart()
         flash('Container Started', 'success')
     return redirect(url_for('vps_list'))
@@ -258,7 +311,7 @@ def vps_restart(vps_id):
 @login_required
 def vps_compact(vps_id):
     container = Container.query.filter_by(id=vps_id).first_or_404()
-    if container.owner == g.user:
+    if g.user.admin or container.owner == g.user:
         container.compact()
         flash('Container Compacted', 'success')
     return redirect(url_for('vps_list'))
@@ -268,7 +321,7 @@ def vps_compact(vps_id):
 @login_required
 def vps_suspend(vps_id):
     container = Container.query.filter_by(id=vps_id).first_or_404()
-    if container.owner == g.user:
+    if g.user.admin or container.owner == g.user:
         container.suspend()
         flash('Container Suspended', 'success')
     return redirect(url_for('vps_list'))
@@ -278,7 +331,7 @@ def vps_suspend(vps_id):
 @login_required
 def vps_resume(vps_id):
     container = Container.query.filter_by(id=vps_id).first_or_404()
-    if container.owner == g.user:
+    if g.user.admin or container.owner == g.user:
         container.resume()
         flash('Container Resumed', 'success')
     return redirect(url_for('vps_list'))
@@ -288,7 +341,7 @@ def vps_resume(vps_id):
 @login_required
 def vps_update(vps_id):
     container = Container.query.filter_by(id=vps_id).first_or_404()
-    if container.owner == g.user:
+    if g.user.admin or container.owner == g.user:
         form = forms.HostnameForm()
         if form.validate_on_submit():
             container.update(hostname=form.hostname.data, name=form.name.data)

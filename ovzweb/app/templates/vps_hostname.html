@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+	<div class="col-md-4 col-md-offset-4">
+		<form class="form-horizontal" method="POST">
+			<fieldset>
+				{{ form.hidden_tag() }}
+				<legend>VPS Name</legend>
+				<div class="form-group">
+					{{ form.hostname.label }} {{ form.hostname(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					{{ form.name.label }} {{ form.name(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					<a class="btn btn-default" href="/vps/list">Cancel</a>
+					<button type="submit" class="btn btn-primary">Update</button>
+				</div>
+			</fieldset>
+		</form>
+	</div>
+</div>
+{% endblock %}

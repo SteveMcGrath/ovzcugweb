@@ -1,4 +1,4 @@
-from app import db
+from app import db, vz
 from datetime import datetime, date
 from flask.ext.login import UserMixin
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -70,7 +70,22 @@ class Ticket(db.Model):
     subject = db.Column(db.String(255))
     priority = db.Column(db.Integer, default=3)
     status = db.Column(db.String(16), default='open')
+    text = db.Column(db.Text)
     conversation = db.relationship('Note', backref='ticket')
+
+    @hybrid_property
+    def age(self):
+        return (datetime.now() - self.created).days
+
+    @hybrid_property
+    def priority_text(self):
+        data = {0: 'critical', 1: 'high', 2: 'normal', 3: 'low', 4: 'informational'}
+        return data[self.priority]
+
+    @hybrid_property
+    def priority_class(self):
+        data = {0: 'danger', 1: 'warning', 2: 'primary', 3: 'warning', 4: 'default', 5: 'info'}
+        return data[self.priority]
 
     def __repr__(self):
         return '<TICKET %s>' % self.id
@@ -79,10 +94,15 @@ class Ticket(db.Model):
 class Note(db.Model):
     __tablename__ = 'notes'
     id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.DateTime, default=datetime.now())
     ticket_id = db.Column(db.Integer, db.ForeignKey('tickets.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     text = db.Column(db.Text)
     user = db.relationship('User')
+
+    @hybrid_property
+    def age(self):
+        return (datetime.now() - self.date).days
 
     def __repr__(self):
         return '<NOTE %s:%s>' % (self.ticket_id, self.id)
@@ -121,23 +141,23 @@ class Container(db.Model):
         return vz.list(self.node, self.ctid)[0]
 
     def start(self):
-        return vz.ctl('start', self.node, self.ctid)
+        return vz.ctl(self.node, self.ctid, 'start')
 
     def stop(self):
-        return vz.ctl('stop', self.node, self.ctid)
+        return vz.ctl(self.node, self.ctid, 'stop')
 
     def restart(self):
-        return vz.ctl('restart', self.node, self.ctid)
+        return vz.ctl(self.node, self.ctid, 'restart')
 
     def delete(self):
-        return vz.ctl('destroy', self.node, self.ctid)
+        return vz.ctl(self.node, self.ctid, 'destroy')
 
     def create(self):
-        vz.ctl('create', self.node, self.ctid, 
+        vz.ctl(self.node, self.ctid, 'create',
                 disk=self.disk,
                 ostemplate=self.template
         )
-        vz.ctl('set', self.node, self.ctid, 
+        vz.ctl(self.node, self.ctid, 'set',
                 name=self.name, 
                 hostname=self.hostname,
                 netfilter='full',
@@ -148,16 +168,16 @@ class Container(db.Model):
         self.change_ram()
 
     def suspend(self):
-        return vz.ctl('suspend', self.node, self.ctid)
+        return vz.ctl(self.node, self.ctid, 'suspend')
 
     def resume(self):
-        return vz.ctl('resume', self.node, self.ctid)
+        return vz.ctl(self.node, self.ctid, 'resume')
 
     def compact(self):
-        return vz.ctl('compact', self.node, self.ctid)
+        return vz.ctl(self.node, self.ctid, 'compact')
 
     def change_ram(self):
-        return vz.ctl('set', self.node, self.ctid,
+        return vz.ctl(self.node, self.ctid, 'set',
             ram='%dM' % self.ram,
             swap='%dM' % self.disk,
             save=''

@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="col-md-6 col-md-offset-3">
+	<a class="btn btn-primary" href="{{ url_for('tickets_list') }}">Return to List</a>
+	<div class="well bs-component clearfix">
+		<div class="row">
+			<div class="col-md-6">
+				<legend>[{{ ticket.id }}] {{ ticket.subject }}</legend>
+			</div>
+			<div class="col-md-3 pull-right">
+				{% if ticket.status == 'open' %}
+					<span class="label label-danger pull-right">STATUS: open</span>
+				{% else %}
+					<span class="label label-success pull-right">STATUS: closed</span>
+				{% endif %}
+				{% if ticket.status == 'open' %}
+					{% if ticket.priority == 4 %}
+						<span class="label label-info pull-right">PRIORITY: Informational</span>
+					{% elif ticket.priority == 3 %}
+						<span class="label label-success pull-right">PRIORITY: Low</span>
+					{% elif ticket.priority == 2 %}
+						<span class="label label-warning pull-right">PRIORITY: Normal</span>
+					{% elif ticket.priority == 1 %}
+						<span class="label label-primary pull-right">PRIORITY: High</span>
+					{% elif ticket.priority == 0 %}
+						<span class="label label-danger pull-right">PRIORITY: Critical</span>
+					{% else %}
+						<span class="label label-danger pull-right">PRIORITY {{ ticket.priority }} UNKNOWN!!!</span>
+					{% endif %}
+					{% if ticket.age < 2 %}
+						<span class="label label-success pull-right">AGE: {{ ticket.age }}</span>
+					{% elif ticket.age < 7 %}
+						<span class="label label-warning pull-right">AGE: {{ ticket.age }}</span>
+					{% else %}
+						<span class="label label-danger pull-right">AGE: {{ ticket.age }}</span>
+					{% endif %}
+				{% endif %}
+			</div>
+		</div>
+		<pre>
+{{ ticket.text }}
+		</pre>
+	</div>
+	{% for note in ticket.conversation %}
+	<div class="well bs-component">
+		<legend>{{ note.age }} : {{ note.date.strftime('%Y-%M-%D') }}</legend>
+		<pre>
+{{ note.text }}
+		</pre>
+	</div>
+	{% endfor %}
+	<div class="well bs-component">
+		<legend>Ticket Update</legend>
+		<form class="form-horizontal" method="POST">
+			<fieldset>
+				{{ form.hidden_tag() }}
+				<div class="form-group">
+					{{ form.status.label }} {{ form.status(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					{{ form.priority.label }} {{ form.priority(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					{{ form.text.label }} {{ form.text(class_='form-control') }}
+				</div>
+				<div class="form-group">
+					<button type="submit" class="btn btn-primary">Submit</button>
+				</div>
+			</fieldset>
+		</form>
+	</div>
+</div>
+{% endblock %}

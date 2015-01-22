@@ -49,6 +49,7 @@ class NewUserForm(Form):
     pw_verify = PasswordField('Verify Password', validators=[Required()])
     membership = IntegerField('Membership Cost', default=150, validators=[Required()])
     admin = BooleanField('Admin User', default=False)
+    submit = SubmitField('Create')
 
 
 class NewContainerForm(Form):
@@ -64,11 +65,25 @@ class NewContainerForm(Form):
 
 
 class NewTicketForm(Form):
-    subject = TextField('Title', validators=[Required()])
+    subject = TextField('Title')
     priority = SelectField('Priority', choices=(
-        (5, 'Informational'),
-        (4, 'Low'),
-        (2, 'Normal'),
-        (1, 'High'),
-        (0, 'Critical'),
-    ), validators=[Required()], default='normal')
+        ('4', 'Informational'),
+        ('3', 'Low'),
+        ('2', 'Normal'),
+        ('1', 'High'),
+        ('0', 'Critical'),
+    ), validators=[Required()], default='2')
+    text = TextAreaField('Content')
+
+
+class TicketUpdateForm(Form):
+    status = SelectField('Status', choices=(('open', 'Open'), ('closed', 'Closed')))
+    priority = SelectField('Priority', choices=(
+        ('4', 'Informational'),
+        ('3', 'Low'),
+        ('2', 'Normal'),
+        ('1', 'High'),
+        ('0', 'Critical'),
+    ), validators=[Required()])
+    text = TextAreaField('Content')
+    submit = SubmitField('Update')
