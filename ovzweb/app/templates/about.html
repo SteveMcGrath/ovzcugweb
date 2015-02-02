@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block content %}
+<p>
+	In 2002, CUGNet started it’s life as a server in the DeVry University Computer Users’ Group (CUG) at the Addison, IL campus. CUG had a small closet on the campus that was converted into a small computer gaming room that was completely independent from the DeVry network. Over time, the CUG was able to garner a public IP address and the ability to host a server out to the Internet. It is from this action that CUGNet was born.
+</p>
+<p>
+	CUGNet was chosen as the system was supposed to be a location for members of the CUG to host their own personal websites, as well as internally act as a Samba PDC for the Windows machines on the CUG Network. The system soon started to take on users outside the CUG Membership, however, as the Addison Linux Users Group started using the system as their own server for introducing new people to Linux (the machine ran Debian Potato at the time).
+</p>
+<p>
+	The machine continued to gain users and it’s uses expanded until the server was compromised in mid 2004. DeVry consequently took the machine off the Internet as they deemed the system a security concern, even after the system was reloaded.
+</p>
+<p>
+	CUGNet was reborn, however. In early 2005, one of the former CUG admins working for the University of Chicago rebuilt a Sun Sunblade 2000 server to Ubuntu 6.06 for sparc. As a side-project to see what packages were available, a LAMP stack and other services started coming on-line and he started granting logins to the server. This was such a success that after he left the University later that year, he secured a rack server and was able to get onShore to host the system for free. onShore was happy to provide their services for no charge with only a few minor restrictions.
+</p>
+<p>
+	Fast-forward to today, CUGNet is now hosted on 2 dedicated boxes with a /27 address space and is continuing to serve our community to this day.  The current generation of CUGNet leverages OpenVZ on top of CentOS 6 boxes using our own home-grown management application for allowing our members to manage their memberships and their VPSs.
+</p>
+{% endblock %}
