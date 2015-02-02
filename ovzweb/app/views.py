@@ -1,19 +1,20 @@
-from flask import render_template, flash, redirect, session, url_for, abort, g
+from flask import render_template, flash, redirect, session, request, url_for, abort, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from app import app, db, login_manager, vz
 from app.models import User, Container, Ticket, Note, Address, Payment
 from sqlalchemy import desc
 from paypal import PayPalConfig
 from paypal import PayPalInterface
+from datetime import timedelta
 import forms
 
-#ppconfig = PayPalConfig(
-#    API_USERNAME=app.config['PAYPAL_USERNAME'],
-#    API_PASSWORD=app.config['PAYPAL_PASSWORD'],
-#    API_SIGNATURE=app.config['PAYPAL_SIGNATURE'],
-#    DEBUG_LEVEL=0
-#)
-#ppinterface = PayPalInterface(config=ppconfig)
+ppconfig = PayPalConfig(
+    API_USERNAME=app.config['PAYPAL_USERNAME'],
+    API_PASSWORD=app.config['PAYPAL_PASSWORD'],
+    API_SIGNATURE=app.config['PAYPAL_SIGNATURE'],
+    DEBUG_LEVEL=0
+)
+ppinterface = PayPalInterface(config=ppconfig)
 
 @login_manager.user_loader
 def load_user(userid):
@@ -23,15 +24,17 @@ def load_user(userid):
 @app.before_request
 def before_request():
     g.user = current_user
-    if g.user.admin:
-        g.open_tickets = Ticket.query.filter_by(status='open').count()
-    else:
-        g.open_tickets = Ticket.query.filter_by(status='open').filter_by(user_id=g.user.id).count()
+    if g.user.is_authenticated():
+        if g.user.admin:
+            g.open_tickets = Ticket.query.filter_by(status='open').count()
+        else:
+            g.open_tickets = Ticket.query.filter_by(status='open').filter_by(user_id=g.user.id).count()
 
 
 @app.route('/')
 def homepage():
-    return render_template('home.html', title='Home')
+    return render_template('home.html', title='Home',
+        vps_remaining=Address.query.filter_by(container_id=None).count())
 
 
 @app.route('/membership')
@@ -85,8 +88,9 @@ def logout():
 @app.route('/membership/paypal/pay')
 @login_required
 def paypal_pay():
+    print '%0.02f' % g.user.membership
     kw = {
-        'amt': g.user.membership,
+        'amt': '%0.02f' % g.user.membership,
         'currencycode': 'USD',
         'returnurl': url_for('paypal_confirm', _external=True),
         'cancelurl': url_for('paypal_cancel', _external=True),
@@ -106,16 +110,16 @@ def paypal_cancel():
 @app.route('/membership/paypal/confirm')
 @login_required
 def paypal_confirm():
-    ppresp = interface.get_express_checkout_details(token=request.args.get('token', ''))
+    ppresp = ppinterface.get_express_checkout_details(token=request.args.get('token', ''))
     if ppresp['ACK'] == 'Success':
-        ppinterface.do_express_checkout(
+        ppinterface.do_express_checkout_payment(
             amt=ppresp['AMT'],
             paymentaction='Sale',
             payerid=ppresp['PAYERID'],
             token=ppresp['TOKEN'],
             currencycode=ppresp['CURRENCYCODE']
         )
-        checkout = interface.get_express_checkout_details(token=ppresp['TOKEN'])
+        checkout = ppinterface.get_express_checkout_details(token=ppresp['TOKEN'])
         if checkout['CHECKOUTSTATUS'] == 'PaymentActionCompleted':
             g.user.payments.append(Payment(token=ppresp['TOKEN']))
             g.user.expires += timedelta(days=365)
@@ -126,7 +130,7 @@ def paypal_confirm():
             flash('Payment Unsuccessful.  Paypal says: %s' % checkout['CHECKOUTSTATUS'], 'danger')
     else:
         flash('Error Processing Payment.  Paypal says: %s' % ppresp['ACK'], 'danger')
-    return redirect(url_for('member_info'))
+    return redirect(url_for('vps_list'))
 
 
 @app.route('/tickets')
